@@ -4,39 +4,60 @@
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
     <title>Hello, world!</title>
+    <style>
+    .jumbotron {
+        background: #80808045;
+        padding: 67px 26px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .media {
+        display: flex;
+    }
+
+    .media-body {
+        flex-grow: 1;
+        flex-shrink: 10;
+        padding-left: 10px;
+    }
+    </style>
 </head>
 
 <body>
     <?php
-        require 'partial/header.php';
-        include "partial/connection.php";
-        $getid = $_GET['threadid'];
-
-        if($_SERVER["REQUEST_METHOD"]=="POST"){
-            $problameDiscription = $_POST['discription'];
-            $insertSql = "INSERT INTO comments(comment_content,comment_thread,comment_user) VALUES('$problameDiscription','$getid','1')";
-            $insertQuery = mysqli_query($cnct,$insertSql);
-            
-        }
-
-
-
-        $sql = "SELECT *FROM threads where thread_id='$getid'";
-        $result = mysqli_query($cnct,$sql);
-        $ob = mysqli_fetch_assoc($result);
-
-        $sqlforcomment = "SELECT * FROM comments where comment_thread='$getid'";
-        $commentResult = mysqli_query($cnct,$sqlforcomment);
-    ?>
-
     
+    require 'partial/header.php';
+    include "partial/connection.php";
+    $getid = $_GET['threadid'];
+
+    if($_SERVER["REQUEST_METHOD"]=="POST"){
+        $problameDiscription = $_POST['discription'];
+        if(isset($_SESSION['isLogin']) && $_SESSION['isLogin']==true){
+            $createcommentId = $_SESSION['userId'];
+            $insertSql = "INSERT INTO comments(comment_content,comment_thread,comment_user) VALUES('$problameDiscription','$getid','$createcommentId')";
+            $insertQuery = mysqli_query($cnct,$insertSql);
+        }else{
+            $isFial = 'ha';
+           $Messages = "first login then ...!";
+        }
+    }
+
+    $sql = "SELECT *FROM threads where thread_id='$getid'";
+    $result = mysqli_query($cnct,$sql);
+    $ob = mysqli_fetch_assoc($result);
+    $sqlforcomment = "SELECT * FROM comments where comment_thread='$getid'";
+    $commentResult = mysqli_query($cnct,$sqlforcomment);
+
+
+?>
 
     <div class="container">
         <div class="row mt-1 mb-3">
@@ -49,18 +70,16 @@
                         created by : Asad
                     </p>
                 </div>
-
-                <form action="<?php $_SERVER['PHP_SELF']?>" method="POST" class="img-thumbnail p-4">
-                    <div class="form-group">
-                        <label for="exampleInputEmail1">Sollution Discription</label>
-                        <textarea name="discription" placeholder="write sollution hare" id="" cols="10" rows="5" class="form-control"></textarea>
-                        <small id="emailHelp" class="form-text text-muted"></small>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                     <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-
-                </form>
+                <?php  
+                if(isset($_SESSION['isLogin']) && $_SESSION['isLogin']==true){
+                    include "partial/sol.php";
+                }else{
+                    echo '<div class="img-thumbnail p-4">
+                            <h1>Contribute form</h1>
+                            <p>please login first to contribute or give sollution</p>
+                        </div>';
+                }
+            ?>
             </div>
             <div class="col-md-4">
                 <div class="list-group">
@@ -82,80 +101,37 @@
 
         </div>
 
-      <?php
-            if(mysqli_num_rows($commentResult)==0){
-                echo "there is no comment be the first person of comment";
-            }
-        
-            while($row=mysqli_fetch_assoc($commentResult)){
-                $commentContent = $row['comment_content'];
+        <?php
+        if(mysqli_num_rows($commentResult)==0){
+            echo "there is no comment be the first person of comment";
+        }
+    
+        while($row=mysqli_fetch_assoc($commentResult)){
 
-                echo '<div class="row mt-1 bg-light px-5 py-3">
-                <div class="media">
-                    <img class="mr-3" src="./img/userimg.png" width="50px" alt="Generic placeholder image">
-                    <div class="media-body">
-                        '.$commentContent.'
-                    </div>
+            $commentContent = $row['comment_content'];
+            $commentTime = $row['comment_time'];
+            $commentUser = $row['comment_user'];
+            $getthreadusersql = mysqli_query($cnct,"SELECT * FROM userprofile where user_id = '$commentUser'");
+            $userRow = mysqli_fetch_assoc($getthreadusersql) ;
+
+            echo '<div class="row mt-1 bg-light px-5 py-3">
+            <div class="media">
+                <img class="mr-3" src="./img/userimg.png" width="50px" alt="Generic placeholder image">
+                <div class="media-body">
+                <p>'.$userRow['user_email'].'  <span class="mx-5">time: '.$commentTime.'</span></p>
+                    '.$commentContent.'
                 </div>
-                </div>';
-            }
-        
-        
-        
-        ?> 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            </div>
+            </div>';
+        }
+    ?>
     </div>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
     </script>
 </body>
 
