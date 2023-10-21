@@ -1,0 +1,4 @@
+catagories(catagori_id,catagori_name,catagori_discription,setTime)
+comments(comment_id,comment_content,comment_thread,comment_user,comment_time)
+threads(thread_id,thread_title,thread_discription,thread_user_id,thread_cat_id,settime)
+userprofile(user_id,user_email,password,settime)
